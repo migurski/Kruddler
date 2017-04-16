@@ -1,6 +1,10 @@
 Kruddler
 ========
 
-Post images from Tumblr to Mastadon.
+Post images from Tumblr to Mastodon.
 
 Compatible with AWS Lambda and assumes an image-only Tumblr feed.
+
+Currently I am using this to post images from [my Tumblr stream](http://migurski.tumblr.com/archive) to [my Mastodon account](https://mastodon.social/@migurski).
+
+<a href="http://migurski.tumblr.com/post/153997349040/70sscifiart-moebius"><img src="http://68.media.tumblr.com/tumblr_ldyvobkCU71qf0aafo1_500.jpg" width="24%" align="bottom"></a> <a href="http://migurski.tumblr.com/post/153937595220/70sscifiart-jack-kirby"><img src="http://68.media.tumblr.com/tumblr_m3bsghBRno1r0c1kwo1_500.jpg" width="24%" align="bottom"></a> <a href="http://migurski.tumblr.com/post/158503009270/dailyoverview-check-out-this-incredible-drone"><img src="http://68.media.tumblr.com/cedf7d15f50a637a69354a85d0b2ac7a/tumblr_ompoz0ry3l1tnemwao1_1280.jpg" width="24%" align="bottom"></a> <a href="http://migurski.tumblr.com/post/159609410655/museum-of-artifacts-polish-winged-hussar"><img src="http://68.media.tumblr.com/f3721078c01f345b458a2b9905685c6d/tumblr_ono4hbjCZe1tgrkdyo1_1280.jpg" width="24%" align="bottom"></a> <a href="http://migurski.tumblr.com/post/159083764420/dailyoverview-the-salt-evaporation-ponds-seen"><img src="http://68.media.tumblr.com/d88bd1365d6c3babaeb9438e0e20895f/tumblr_onl0ofpf5f1tnemwao1_1280.jpg" width="24%" align="top"></a> <a href="http://migurski.tumblr.com/post/159396599275/via-wardrobe-snacks-thoughtfully-composed"><img src="http://68.media.tumblr.com/be73785e2d4575efc2b3ccf8997ddeaa/tumblr_oo671f2pnE1qz4b8uo1_1280.jpg" width="24%" align="top"></a> <a href="http://migurski.tumblr.com/post/159609777480/jonathan-e-tryfan-mountain-in-wales-acrylic"><img src="http://68.media.tumblr.com/091d79fd363cb034a885e1eacabce0d4/tumblr_om30rfjTk31qgbq8fo1_1280.jpg" width="24%" align="top"></a> <a href="http://migurski.tumblr.com/post/159610198045"><img src="http://68.media.tumblr.com/0a307ff57640b753c95043ca18a61ac2/tumblr_oo48njdmoq1tgclxpo1_1280.jpg" width="24%" align="top"></a>
