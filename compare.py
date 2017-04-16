@@ -4,7 +4,7 @@
 Compatible with AWS Lambda and assumes an image-only Tumblr feed.
 '''
 from __future__ import print_function
-import os, sys, re, urlparse, pprint, xml.etree.ElementTree, itertools, json
+import os, sys, re, urlparse, pprint, itertools, json
 import feedparser, uritemplate, requests, bs4
 
 # External configuration from environment variables.
@@ -71,13 +71,12 @@ def load_posts(tumblr_url):
     '''
     tumblr_rss_url = urlparse.urljoin(tumblr_url, '/rss')
     
-    got3 = requests.get(tumblr_url)
-    tree3 = xml.etree.ElementTree.fromstring(got3.content)
     tumblr_posts = list()
-
-    for child in tree3.find('channel').findall('item'):
-        soup = bs4.BeautifulSoup(child.find('description').text, 'html.parser')
-        link = child.find('link').text
+    feed = feedparser.parse(tumblr_rss_url)
+    
+    for entry in feed.entries:
+        soup = bs4.BeautifulSoup(entry.summary, 'html.parser')
+        link = entry.link
         image_url = soup.find('img')['src']
         text = soup.get_text()
         text = ' '.join(soup.find_all(text=re.compile('.*')))
