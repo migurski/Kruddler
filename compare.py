@@ -1,7 +1,18 @@
 #!/usr/bin/env python2.7
+''' Post images from Tumblr to Mastadon.
+
+Compatible with AWS Lambda and assumes an image-only Tumblr feed.
+'''
 from __future__ import print_function
 import os, sys, re, urlparse, pprint, xml.etree.ElementTree, itertools, json
 import feedparser, uritemplate, requests, bs4
+
+# External configuration from environment variables.
+# Good information about the Mastodon OAuth dance is here:
+# https://tinysubversions.com/notes/mastodon-bot/index.html
+tumblr_url = os.environ['TUMBLR_URL']           # e.g. http://migurski.tumblr.com/rss
+mastodon_url = os.environ['MASTODON_BASE']      # e.g. https://mastodon.social
+mastodon_token = os.environ['MASTODON_TOKEN']   # alpha-numeric string
 
 class Post:
     ''' Tumblr RSS Item with a link, image URL, and text.
@@ -34,15 +45,11 @@ class Toot:
                 return True
         return False
 
-tumblr_url = os.environ['TUMBLR_URL']
-mastodon_url = os.environ['MASTODON_BASE']
-mastodon_token = os.environ['MASTODON_TOKEN']
-
-# Current user
+# Current user:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#getting-the-current-user
 mastodon_whoami_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/verify_credentials')
 
-# Account statuses
+# Account statuses:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#getting-an-accounts-statuses
 mastodon_statuses_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/{id}/statuses')
 
@@ -62,6 +69,8 @@ def load_posts(tumblr_url):
     
         These are assumed to be in reverse-chronological order.
     '''
+    tumblr_rss_url = urlparse.urljoin(tumblr_url, '/rss')
+    
     got3 = requests.get(tumblr_url)
     tree3 = xml.etree.ElementTree.fromstring(got3.content)
     tumblr_posts = list()
@@ -136,7 +145,9 @@ def main():
     
     if len(untooted_posts) == 0:
         print('No untooted post', file=sys.stderr)
-    elif len(untooted_posts) == len(tumblr_posts):
+        return
+
+    if len(untooted_posts) == len(tumblr_posts):
         raise RuntimeError('Suspiciously, all posts are untooted')
 
     print('Untooted:', file=sys.stderr)
