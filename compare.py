@@ -86,7 +86,7 @@ def load_posts(tumblr_url):
     
     return tumblr_posts
 
-def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header):
+def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header, max_count=50):
     ''' Load recent toots from a Mastodon instance and return list of Toot objects.
     
         These are assumed to be in reverse-chronological order.
@@ -94,17 +94,24 @@ def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header):
     got1 = requests.get(mastodon_whoami_url, headers=mastodon_header)
     mastodon_id = got1.json().get('id')
 
-    url2 = uritemplate.expand(mastodon_statuses_url, dict(id=mastodon_id))
-    got2 = requests.get(url2, headers=mastodon_header)
-
     mastodon_toots = list()
+    url = uritemplate.expand(mastodon_statuses_url, dict(id=mastodon_id))
+    
+    while len(mastodon_toots) < max_count:
+        print('Get', url, '...', file=sys.stderr)
+        got2 = requests.get(url, headers=mastodon_header)
 
-    for status in got2.json():
-        url = status['url']
-        soup = bs4.BeautifulSoup(status['content'], 'html.parser')
-        links = [a['href'] for a in soup.find_all('a')]
-        mastodon_toots.append(Toot(url, links))
-        print(mastodon_toots[-1], file=sys.stderr)
+        for status in got2.json():
+            url = status['url']
+            soup = bs4.BeautifulSoup(status['content'], 'html.parser')
+            links = [a['href'] for a in soup.find_all('a')]
+            mastodon_toots.append(Toot(url, links))
+            print(mastodon_toots[-1], file=sys.stderr)
+        
+        if 'next' in got2.links:
+            url = got2.links['next']['url']
+        else:
+            break
     
     return mastodon_toots
 
