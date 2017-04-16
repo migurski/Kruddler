@@ -45,7 +45,7 @@ mastodon_statuses_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/{id}/st
 # OAuth header
 mastodon_header = {'Authorization': 'Bearer {}'.format(mastodon_token)}
 
-def main():
+def load_posts(tumblr_url):
     '''
     '''
     got3 = requests.get(tumblr_url)
@@ -60,7 +60,12 @@ def main():
         text = ' '.join(soup.find_all(text=re.compile('.*')))
         tumblr_posts.append(Post(link, image_url, text))
         print(tumblr_posts[-1], file=sys.stderr)
+    
+    return tumblr_posts
 
+def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header):
+    '''
+    '''
     got1 = requests.get(mastodon_whoami_url, headers=mastodon_header)
     mastodon_id = got1.json().get('id')
 
@@ -74,18 +79,30 @@ def main():
         soup = bs4.BeautifulSoup(status['content'], 'html.parser')
         links = [a['href'] for a in soup.find_all('a')]
         mastodon_toots.append(Toot(url, links))
-        print(mastodon_toots[-1])
+        print(mastodon_toots[-1], file=sys.stderr)
+    
+    return mastodon_toots
+
+def main():
+    '''
+    '''
+    tumblr_posts = load_posts(tumblr_url)
+    mastodon_toots = load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header)
 
     for (post, toot) in itertools.product(tumblr_posts, mastodon_toots):
         if post in toot:
-            print(post, toot)
-            print(tumblr_posts.index(post))
-            print(mastodon_toots.index(toot))
+            print(post, toot, file=sys.stderr)
             untooted_posts = tumblr_posts[:tumblr_posts.index(post)]
             break
+    
+    if len(untooted_posts) == 0:
+        print('No untooted post', file=sys.stderr)
+    elif len(untooted_posts) == len(tumblr_posts):
+        raise RuntimeError('Suspiciously, all posts are untooted')
 
+    print('Untooted:', file=sys.stderr)
     for post in untooted_posts:
-        print(post.link, post.text)
+        print(post.link, post.text, file=sys.stderr)
 
 def lambda_handler(event, context):
     return main()
