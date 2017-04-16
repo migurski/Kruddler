@@ -4,7 +4,7 @@ import os, sys, re, urlparse, pprint, xml.etree.ElementTree, itertools, json
 import feedparser, uritemplate, requests, bs4
 
 class Post:
-    ''' RSS Item.
+    ''' Tumblr RSS Item with a link, image URL, and text.
     '''
     def __init__(self, link, image_url, text):
         self.link = link
@@ -14,7 +14,7 @@ class Post:
         return '<Post {}>'.format(self.link)
 
 class Toot:
-    ''' Mastodon status.
+    ''' Mastodon status with a URL and links from inside the text.
     
         https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#status
     '''
@@ -24,6 +24,10 @@ class Toot:
     def __str__(self):
         return '<Toot {} ({})>'.format(self.url, len(self.links))
     def __contains__(self, post):
+        ''' Return true if the Post is linked within this Toot.
+        
+            Allow for optional Tumblr trailing slugs.
+        '''
         for toot_link in self.links:
             joined = urlparse.urljoin(post.link, toot_link)
             if joined.startswith(post.link):
@@ -54,7 +58,9 @@ mastodon_status_url = urlparse.urljoin(mastodon_url, '/api/v1/statuses')
 mastodon_header = {'Authorization': 'Bearer {}'.format(mastodon_token)}
 
 def load_posts(tumblr_url):
-    '''
+    ''' Load recent posts from a Tumblr RSS URL and return list of Post objects.
+    
+        These are assumed to be in reverse-chronological order.
     '''
     got3 = requests.get(tumblr_url)
     tree3 = xml.etree.ElementTree.fromstring(got3.content)
@@ -72,7 +78,9 @@ def load_posts(tumblr_url):
     return tumblr_posts
 
 def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header):
-    '''
+    ''' Load recent toots from a Mastodon instance and return list of Toot objects.
+    
+        These are assumed to be in reverse-chronological order.
     '''
     got1 = requests.get(mastodon_whoami_url, headers=mastodon_header)
     mastodon_id = got1.json().get('id')
@@ -92,7 +100,7 @@ def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header):
     return mastodon_toots
 
 def toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header):
-    '''
+    ''' Toot a single Post to Mastodon with a media attachment.
     '''
     text = u'{}\n\n{}'.format(post.text.strip(), post.link).strip()[:500]
     image = requests.get(post.image_url)
@@ -115,7 +123,7 @@ def toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header):
     print('Status', status_id, '-', status_url, file=sys.stderr)
 
 def main():
-    '''
+    ''' Toot the first untooted Post from Tumblr to Mastadon.
     '''
     tumblr_posts = load_posts(tumblr_url)
     mastodon_toots = load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header)
