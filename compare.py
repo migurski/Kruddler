@@ -45,41 +45,50 @@ mastodon_statuses_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/{id}/st
 # OAuth header
 mastodon_header = {'Authorization': 'Bearer {}'.format(mastodon_token)}
 
-got3 = requests.get(tumblr_url)
-tree3 = xml.etree.ElementTree.fromstring(got3.content)
-tumblr_posts = list()
+def main():
+    '''
+    '''
+    got3 = requests.get(tumblr_url)
+    tree3 = xml.etree.ElementTree.fromstring(got3.content)
+    tumblr_posts = list()
 
-for child in tree3.find('channel').findall('item'):
-    soup = bs4.BeautifulSoup(child.find('description').text, 'html.parser')
-    link = child.find('link').text
-    image_url = soup.find('img')['src']
-    text = soup.get_text()
-    text = ' '.join(soup.find_all(text=re.compile('.*')))
-    tumblr_posts.append(Post(link, image_url, text))
-    print(tumblr_posts[-1], file=sys.stderr)
+    for child in tree3.find('channel').findall('item'):
+        soup = bs4.BeautifulSoup(child.find('description').text, 'html.parser')
+        link = child.find('link').text
+        image_url = soup.find('img')['src']
+        text = soup.get_text()
+        text = ' '.join(soup.find_all(text=re.compile('.*')))
+        tumblr_posts.append(Post(link, image_url, text))
+        print(tumblr_posts[-1], file=sys.stderr)
 
-got1 = requests.get(mastodon_whoami_url, headers=mastodon_header)
-mastodon_id = got1.json().get('id')
+    got1 = requests.get(mastodon_whoami_url, headers=mastodon_header)
+    mastodon_id = got1.json().get('id')
 
-url2 = uritemplate.expand(mastodon_statuses_url, dict(id=mastodon_id))
-got2 = requests.get(url2, headers=mastodon_header)
+    url2 = uritemplate.expand(mastodon_statuses_url, dict(id=mastodon_id))
+    got2 = requests.get(url2, headers=mastodon_header)
 
-mastodon_toots = list()
+    mastodon_toots = list()
 
-for status in got2.json():
-    url = status['url']
-    soup = bs4.BeautifulSoup(status['content'], 'html.parser')
-    links = [a['href'] for a in soup.find_all('a')]
-    mastodon_toots.append(Toot(url, links))
-    print(mastodon_toots[-1])
+    for status in got2.json():
+        url = status['url']
+        soup = bs4.BeautifulSoup(status['content'], 'html.parser')
+        links = [a['href'] for a in soup.find_all('a')]
+        mastodon_toots.append(Toot(url, links))
+        print(mastodon_toots[-1])
 
-for (post, toot) in itertools.product(tumblr_posts, mastodon_toots):
-    if post in toot:
-        print(post, toot)
-        print(tumblr_posts.index(post))
-        print(mastodon_toots.index(toot))
-        untooted_posts = tumblr_posts[:tumblr_posts.index(post)]
-        break
+    for (post, toot) in itertools.product(tumblr_posts, mastodon_toots):
+        if post in toot:
+            print(post, toot)
+            print(tumblr_posts.index(post))
+            print(mastodon_toots.index(toot))
+            untooted_posts = tumblr_posts[:tumblr_posts.index(post)]
+            break
 
-for post in untooted_posts:
-    print(post.link, post.text)
+    for post in untooted_posts:
+        print(post.link, post.text)
+
+def lambda_handler(event, context):
+    return main()
+
+if __name__ == '__main__':
+    exit(main())
