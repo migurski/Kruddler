@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
-import os, sys, re, urlparse, pprint, xml.etree.ElementTree, itertools
+import os, sys, re, urlparse, pprint, xml.etree.ElementTree, itertools, json
 import feedparser, uritemplate, requests, bs4
 
 class Post:
@@ -41,6 +41,14 @@ mastodon_whoami_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/verify_cr
 # Account statuses
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#getting-an-accounts-statuses
 mastodon_statuses_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/{id}/statuses')
+
+# Uploading a media attachment:
+# https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#media
+mastodon_media_url = urlparse.urljoin(mastodon_url, '/api/v1/media')
+
+# Posting a new status:
+# https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#posting-a-new-status
+mastodon_status_url = urlparse.urljoin(mastodon_url, '/api/v1/statuses')
 
 # OAuth header
 mastodon_header = {'Authorization': 'Bearer {}'.format(mastodon_token)}
@@ -83,6 +91,29 @@ def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header):
     
     return mastodon_toots
 
+def toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header):
+    '''
+    '''
+    text = u'{}\n\n{}'.format(post.text.strip(), post.link).strip()[:500]
+    image = requests.get(post.image_url)
+    pprint.pprint(dict(text=text, image=post.image_url), stream=sys.stderr)
+    
+    # Create a new media attachment with the post image
+    file = os.path.basename(post.image_url), image.content, image.headers['Content-Type']
+    posted1 = requests.post(mastodon_media_url, files=dict(file=file), headers=mastodon_header)
+
+    media_id, media_url = posted1.json().get('id'), posted1.json().get('url')
+    print('Media', media_id, '-', media_url, file=sys.stderr)
+    
+    # Create a new status with the attachment
+    body = json.dumps(dict(media_ids=[media_id], status=text))
+    headers = {'Content-Type': 'application/json'}
+    headers.update(mastodon_header)
+    posted2 = requests.post(mastodon_status_url, data=body, headers=headers)
+
+    status_id, status_url = posted2.json().get('id'), posted2.json().get('url')
+    print('Status', status_id, '-', status_url, file=sys.stderr)
+
 def main():
     '''
     '''
@@ -91,7 +122,7 @@ def main():
 
     for (post, toot) in itertools.product(tumblr_posts, mastodon_toots):
         if post in toot:
-            print(post, toot, file=sys.stderr)
+            print(post, '=', toot, file=sys.stderr)
             untooted_posts = tumblr_posts[:tumblr_posts.index(post)]
             break
     
@@ -102,7 +133,11 @@ def main():
 
     print('Untooted:', file=sys.stderr)
     for post in untooted_posts:
-        print(post.link, post.text, file=sys.stderr)
+        print('-', post.link, post.text, file=sys.stderr)
+    
+    post = untooted_posts.pop()
+    print('Tooting', post, '...', file=sys.stderr)
+    toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header)
 
 def lambda_handler(event, context):
     return main()
