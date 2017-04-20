@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# -*- coding: utf-8 -*-
 ''' Post images from Tumblr to Mastadon.
 
 Compatible with AWS Lambda and assumes an image-only Tumblr feed.
@@ -117,7 +118,11 @@ def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header, max_
 def toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header):
     ''' Toot a single Post to Mastodon with a media attachment.
     '''
-    text = u'{}\n\n{}'.format(post.text.strip(), post.link).strip()[:500]
+    suffix = u'\n\n{}'.format(post.link)
+    text = u'{}{}'.format(post.text.strip(), suffix).strip()
+    if len(text) > 500:
+        cutoff = 499 - len(suffix)
+        text = u'{}…{}'.format(post.text.strip()[:cutoff], suffix).strip()
     image = requests.get(post.image_url)
     pprint.pprint(dict(text=text, image=post.image_url), stream=sys.stderr)
     
