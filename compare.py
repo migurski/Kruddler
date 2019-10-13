@@ -1,11 +1,11 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ''' Post images from Tumblr to Mastadon.
 
 Compatible with AWS Lambda and assumes an image-only Tumblr feed.
 '''
 from __future__ import print_function
-import os, sys, re, urlparse, pprint, itertools, json
+import os, sys, re, urllib.parse, pprint, itertools, json
 import feedparser, uritemplate, requests, bs4
 
 # External configuration from environment variables.
@@ -41,26 +41,26 @@ class Toot:
             Allow for optional Tumblr trailing slugs.
         '''
         for toot_link in self.links:
-            joined = urlparse.urljoin(post.link, toot_link)
+            joined = urllib.parse.urljoin(post.link, toot_link)
             if joined.startswith(post.link):
                 return True
         return False
 
 # Current user:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#getting-the-current-user
-mastodon_whoami_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/verify_credentials')
+mastodon_whoami_url = urllib.parse.urljoin(mastodon_url, '/api/v1/accounts/verify_credentials')
 
 # Account statuses:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#getting-an-accounts-statuses
-mastodon_statuses_url = urlparse.urljoin(mastodon_url, '/api/v1/accounts/{id}/statuses')
+mastodon_statuses_url = urllib.parse.urljoin(mastodon_url, '/api/v1/accounts/{id}/statuses')
 
 # Uploading a media attachment:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#media
-mastodon_media_url = urlparse.urljoin(mastodon_url, '/api/v1/media')
+mastodon_media_url = urllib.parse.urljoin(mastodon_url, '/api/v1/media')
 
 # Posting a new status:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#posting-a-new-status
-mastodon_status_url = urlparse.urljoin(mastodon_url, '/api/v1/statuses')
+mastodon_status_url = urllib.parse.urljoin(mastodon_url, '/api/v1/statuses')
 
 # OAuth header
 mastodon_header = {'Authorization': 'Bearer {}'.format(mastodon_token)}
@@ -70,7 +70,7 @@ def load_posts(tumblr_url):
     
         These are assumed to be in reverse-chronological order.
     '''
-    tumblr_rss_url = urlparse.urljoin(tumblr_url, '/rss')
+    tumblr_rss_url = urllib.parse.urljoin(tumblr_url, '/rss')
     
     tumblr_posts = list()
     feed = feedparser.parse(tumblr_rss_url)
