@@ -147,6 +147,10 @@ def main():
     '''
     tumblr_posts = load_posts(tumblr_url)
     mastodon_toots = load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header)
+    untooted_posts = tumblr_posts[:]
+    
+    if not tumblr_posts or not mastodon_toots:
+        raise RuntimeError('Suspiciously, tumblr_posts or mastodon_toots are missing')
 
     for (post, toot) in itertools.product(tumblr_posts, mastodon_toots):
         if post in toot:
