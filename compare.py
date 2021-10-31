@@ -78,7 +78,11 @@ def load_posts(tumblr_url):
     for entry in feed.entries:
         soup = bs4.BeautifulSoup(entry.summary, 'html.parser')
         link = entry.link
-        image_url = soup.find('img')['src']
+        try:
+            image_url = soup.find('img')['src']
+        except TypeError:
+            print('No img in', link)
+            continue
         text = soup.get_text()
         text = ' '.join(soup.find_all(text=re.compile('.*')))
         tumblr_posts.append(Post(link, image_url, text))
@@ -147,6 +151,7 @@ def main():
     '''
     tumblr_posts = load_posts(tumblr_url)
     mastodon_toots = load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header)
+    untooted_posts = []
 
     for (post, toot) in itertools.product(tumblr_posts, mastodon_toots):
         if post in toot:
