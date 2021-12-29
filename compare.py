@@ -76,7 +76,7 @@ def load_posts(tumblr_url):
     feed = feedparser.parse(tumblr_rss_url)
     
     for entry in feed.entries:
-        soup = bs4.BeautifulSoup(entry.summary, 'html.parser')
+        soup = bs4.BeautifulSoup(getattr(entry, 'summary', ''), 'html.parser')
         link = entry.link
         try:
             image_url = soup.find('img')['src']
