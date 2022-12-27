@@ -137,8 +137,9 @@ def toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header):
     media_id, media_url = posted1.json().get('id'), posted1.json().get('url')
     print('Media', media_id, '-', media_url, file=sys.stderr)
     
-    # Chill for a few seconds, see if this helps the media become available consistently?
-    time.sleep(15)
+    # *shrug*
+    if posted1.status_code != 200:
+        raise RuntimeError()
     
     # Create a new status with the attachment
     body = json.dumps(dict(media_ids=[media_id], status=text))
