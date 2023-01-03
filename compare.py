@@ -56,7 +56,7 @@ mastodon_statuses_url = urllib.parse.urljoin(mastodon_url, '/api/v1/accounts/{id
 
 # Uploading a media attachment:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#media
-mastodon_media_url = urllib.parse.urljoin(mastodon_url, '/api/v1/media')
+mastodon_media_url = urllib.parse.urljoin(mastodon_url, '/api/v2/media')
 
 # Posting a new status:
 # https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#posting-a-new-status
@@ -73,7 +73,8 @@ def load_posts(tumblr_url):
     tumblr_rss_url = urllib.parse.urljoin(tumblr_url, '/rss')
     
     tumblr_posts = list()
-    feed = feedparser.parse(tumblr_rss_url)
+    got = requests.get(tumblr_rss_url)
+    feed = feedparser.parse(got.content)
     
     for entry in feed.entries:
         soup = bs4.BeautifulSoup(getattr(entry, 'summary', ''), 'html.parser')
