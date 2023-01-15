@@ -91,7 +91,7 @@ def load_posts(tumblr_url):
     
     return tumblr_posts
 
-def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header, max_count=50):
+def load_toots(mastodon_whoami_url, mastodon_statuses_url, mastodon_header, max_count=500):
     ''' Load recent toots from a Mastodon instance and return list of Toot objects.
     
         These are assumed to be in reverse-chronological order.
