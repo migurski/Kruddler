@@ -139,14 +139,23 @@ def toot_post(post, mastodon_media_url, mastodon_status_url, mastodon_header):
     print('Media', media_id, '-', media_url, file=sys.stderr)
     
     # *shrug*
-    if posted1.status_code != 200:
-        raise RuntimeError()
+    if posted1.status_code not in range(200, 299):
+        raise RuntimeError(posted1.text)
     
     # Create a new status with the attachment
-    body = json.dumps(dict(media_ids=[media_id], status=text))
-    headers = {'Content-Type': 'application/json'}
-    headers.update(mastodon_header)
-    posted2 = requests.post(mastodon_status_url, data=body, headers=headers)
+    while True:
+        body = json.dumps(dict(media_ids=[media_id], status=text))
+        headers = {'Content-Type': 'application/json'}
+        headers.update(mastodon_header)
+        posted2 = requests.post(mastodon_status_url, data=body, headers=headers)
+        if posted2.status_code in range(200, 299):
+            break
+        elif posted2.status_code == 422:
+            print(posted2.text, file=sys.stderr)
+            time.sleep(5)
+        else:
+            print('posted2:', posted2, file=sys.stderr)
+            raise RuntimeError(posted2.text)
 
     status_id, status_url = posted2.json().get('id'), posted2.json().get('url')
     print('Status', status_id, '-', status_url, file=sys.stderr)
