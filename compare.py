@@ -65,6 +65,24 @@ mastodon_status_url = urllib.parse.urljoin(mastodon_url, '/api/v1/statuses')
 # OAuth header
 mastodon_header = {'Authorization': 'Bearer {}'.format(mastodon_token)}
 
+def fix_post_soup(soup):
+    ''' Fix Tumblelog links incorrectly parsed by Tumblr RSS
+    
+    Example:
+    <a href="https://sfba.social/@garybarker/111506273687416996">https://sfba.social/</a><a class="tumblelog" href="https://tmblr.co/MAFFnjm_fpR-UNP8C3Yf5vA">@garybarker</a>/111506273687416996
+    
+    Output:
+    <a href="https://sfba.social/@garybarker/111506273687416996">https://sfba.social/@garybarker/111506273687416996</a>
+    '''
+    if userlink := soup.find(text=re.compile(r"^@"), class_="tumblelog"):
+        tootlink = userlink.previous_sibling
+        linktail = userlink.next_sibling
+        if tootlink.name.lower() == "a" and isinstance(linktail, bs4.NavigableString):
+            tootlink.contents[0].replace_with(tootlink.attrs["href"])
+            userlink.extract()
+            linktail.extract()
+    return soup
+
 def load_posts(tumblr_url):
     ''' Load recent posts from a Tumblr RSS URL and return list of Post objects.
     
@@ -78,6 +96,7 @@ def load_posts(tumblr_url):
     
     for entry in feed.entries:
         soup = bs4.BeautifulSoup(getattr(entry, 'summary', ''), 'html.parser')
+        soup = fix_post_soup(soup)
         link = entry.link
         try:
             image_url = soup.find('img')['src']
@@ -85,7 +104,7 @@ def load_posts(tumblr_url):
             print('No img in', link)
             continue
         text = soup.get_text()
-        text = ' '.join(soup.find_all(text=re.compile('.*')))
+        text = ' '.join(soup.find_all(text=re.compile('.*'))).replace("  ", " ")
         tumblr_posts.append(Post(link, image_url, text))
         print(tumblr_posts[-1], file=sys.stderr)
     
